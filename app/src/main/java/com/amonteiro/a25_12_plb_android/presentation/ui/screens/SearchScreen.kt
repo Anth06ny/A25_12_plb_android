@@ -46,13 +46,12 @@ fun SearchScreenPreview() {
 fun SearchScreen(modifier: Modifier = Modifier,
                  mainViewModel: MainViewModel = MainViewModel()) {
 
-
     Column(modifier = modifier.fillMaxSize()) {
 
         val list = mainViewModel.dataList.collectAsStateWithLifecycle().value
 
         list.forEach {
-            PictureRowItem(data = it, modifier = Modifier.background(MaterialTheme.colorScheme.onTertiaryContainer))
+            PictureRowItem(data = it, modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh))
         }
     }
 }
@@ -84,10 +83,10 @@ fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherBean) {
 
         Column(modifier = Modifier.padding(4.dp)) {
             Text(text = data.name,
-                color = MaterialTheme.colorScheme.tertiaryContainer,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 20.sp)
             Text(text = data.getResume().take(20) + "...",
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp)
         }
     }
