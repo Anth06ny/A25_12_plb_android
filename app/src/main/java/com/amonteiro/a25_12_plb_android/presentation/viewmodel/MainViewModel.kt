@@ -34,8 +34,6 @@ class MainViewModel : ViewModel() {
     val errorMessage = MutableStateFlow("")
 
     init {
-        println("Instanciation de MainViewModel")
-        loadFakeData()
     }
 
     fun loadWeathers(cityName: String) {
