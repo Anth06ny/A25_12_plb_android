@@ -47,7 +47,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             //on peut passer le navHostController à un écran s'il déclenche des navigations
             SearchScreen(
                 mainViewModel = mainViewModel,
-                onPictureItemClick = { weather -> navHostController.navigate(Routes.DetailRoute(weather.id))}
+
+                onPictureItemClick = { weather -> navHostController.navigate(Routes.DetailRoute(weather.id))},
             )
         }
 
@@ -58,7 +59,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             DetailScreen(
                 data = weatherBean,
-                onBackClick = { navHostController.popBackStack()}
+                onBackClick = { navHostController.popBackStack()},
+                mainViewModel = mainViewModel,
+                showBackIcon = navHostController.previousBackStackEntry != null
             )
         }
     }

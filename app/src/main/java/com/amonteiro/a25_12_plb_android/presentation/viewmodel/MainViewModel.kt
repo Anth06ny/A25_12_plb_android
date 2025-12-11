@@ -10,6 +10,7 @@ import com.amonteiro.a25_12_plb_android.data.remote.WindBean
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 suspend fun main() {
@@ -34,6 +35,13 @@ class MainViewModel : ViewModel() {
     val errorMessage = MutableStateFlow("")
 
     init {
+    }
+
+    fun toggleFavorite(id: Int) {
+        dataList.update {
+            //Crée une nouvelle liste Avec une nouvelle référence pour l'objet qui a changé
+            it.map { w -> if (w.id == id) w.copy(favorite = !w.favorite) else w }
+        }
     }
 
     fun loadWeathers(cityName: String) {

@@ -83,7 +83,8 @@ data class WeatherAPIResult(val list: List<WeatherBean>)
 data class WeatherBean(
     val id: Int, val name: String, var main: TempBean,
     var weather: List<DescriptionBean>,
-    var wind: WindBean
+    var wind: WindBean,
+    val favorite : Boolean = false
 ) {
 
     fun getResume() = """

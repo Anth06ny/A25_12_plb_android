@@ -19,15 +19,20 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -83,16 +88,14 @@ fun SearchScreenPreview() {
     //Il faut remplacer NomVotreAppliTheme par le thème de votre application
     //Utilisé par exemple dans MainActivity.kt sous setContent {...}
     A25_12_plb_androidTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            val mainViewModel: MainViewModel = viewModel()
-            SearchScreen(
-                modifier = Modifier.padding(innerPadding),
-                mainViewModel = mainViewModel
-            )
-        }
+        val mainViewModel: MainViewModel = viewModel()
+        SearchScreen(
+            mainViewModel = mainViewModel
+        )
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     modifier: Modifier = Modifier,
@@ -100,69 +103,98 @@ fun SearchScreen(
     onPictureItemClick: (WeatherBean) -> Unit = {}
 ) {
 
+    var showFavorite by remember { mutableStateOf(false) }
 
-
-    Column(
+    Scaffold(
         modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Météo") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                ),
+                actions = {
+                    IconButton(onClick = { showFavorite = !showFavorite }) {
+                        Icon(
+                            imageVector =
+                                if (showFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "favoris"
+                        )
+                    }
+                }
 
-        var searchText by rememberSaveable { mutableStateOf("") }
-
-        SearchBar(
-            text = searchText,
-            onValueChange = { searchText = it },
-            onSearchEnter = { mainViewModel.loadWeathers(searchText) }
-
-        )
-
-        val runInProgress by mainViewModel.runInProgress.collectAsStateWithLifecycle()
-        val errorMessage by mainViewModel.errorMessage.collectAsStateWithLifecycle()
-
-        MyError(errorMessage = errorMessage)
-        AnimatedVisibility(visible = runInProgress) {
-            CircularProgressIndicator()
+            )
         }
 
-        val list = mainViewModel.dataList.collectAsStateWithLifecycle().value.filter { it.name.contains(searchText, true) }
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)
+    ) { innerPadding ->
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            items(list.size) {
-                PictureRowItem(
-                    data = list[it],
-                    onPictureClick = { onPictureItemClick(list[it]) })
-            }
-        }
 
-        Row {
-            Button(
-                onClick = { searchText = "" },
-                contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+            var searchText by rememberSaveable { mutableStateOf("") }
+
+            SearchBar(
+                text = searchText,
+                onValueChange = { searchText = it },
+                onSearchEnter = { mainViewModel.loadWeathers(searchText) }
+
+            )
+
+            val runInProgress by mainViewModel.runInProgress.collectAsStateWithLifecycle()
+            val errorMessage by mainViewModel.errorMessage.collectAsStateWithLifecycle()
+
+            MyError(errorMessage = errorMessage)
+            AnimatedVisibility(visible = runInProgress) {
+                CircularProgressIndicator()
+            }
+
+            val list = mainViewModel.dataList.collectAsStateWithLifecycle().value
+                .filter { !showFavorite || it.favorite }
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)
             ) {
-                Icon(
-                    Icons.Filled.Favorite,
-                    contentDescription = "Localized description",
-                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.bt_filter))
+                items(list.size) {
+                    PictureRowItem(
+                        data = list[it],
+                        onPictureClick = { onPictureItemClick(list[it]) })
+                }
             }
 
-            Button(
-                onClick = { mainViewModel.loadWeathers(searchText) },
-                contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-            ) {
-                Icon(
-                    Icons.Filled.Favorite,
-                    contentDescription = "Localized description",
-                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.load_data))
-            }
+            Row {
+                Button(
+                    onClick = { searchText = "" },
+                    contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                ) {
+                    Icon(
+                        Icons.Filled.Favorite,
+                        contentDescription = "Localized description",
+                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.bt_filter))
+                }
 
+                Button(
+                    onClick = { mainViewModel.loadWeathers(searchText) },
+                    contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                ) {
+                    Icon(
+                        Icons.Filled.Favorite,
+                        contentDescription = "Localized description",
+                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.load_data))
+                }
+
+            }
 
         }
     }
