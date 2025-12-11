@@ -1,5 +1,6 @@
 package com.amonteiro.a25_12_plb_android.presentation.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -45,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.amonteiro.a25_12_plb_android.R
 import com.amonteiro.a25_12_plb_android.data.remote.WeatherBean
+import com.amonteiro.a25_12_plb_android.presentation.ui.MyError
 import com.amonteiro.a25_12_plb_android.presentation.ui.theme.A25_12_plb_androidTheme
 import com.amonteiro.a25_12_plb_android.presentation.viewmodel.MainViewModel
 
@@ -93,8 +96,10 @@ fun SearchScreenPreview() {
 @Composable
 fun SearchScreen(
     modifier: Modifier = Modifier,
-    mainViewModel: MainViewModel = viewModel()
+    mainViewModel: MainViewModel = viewModel(),
+    onPictureItemClick: (WeatherBean) -> Unit = {}
 ) {
+
 
 
     Column(
@@ -111,6 +116,13 @@ fun SearchScreen(
 
         )
 
+        val runInProgress by mainViewModel.runInProgress.collectAsStateWithLifecycle()
+        val errorMessage by mainViewModel.errorMessage.collectAsStateWithLifecycle()
+
+        MyError(errorMessage = errorMessage)
+        AnimatedVisibility(visible = runInProgress) {
+            CircularProgressIndicator()
+        }
 
         val list = mainViewModel.dataList.collectAsStateWithLifecycle().value.filter { it.name.contains(searchText, true) }
 
@@ -118,7 +130,9 @@ fun SearchScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)
         ) {
             items(list.size) {
-                PictureRowItem(data = list[it])
+                PictureRowItem(
+                    data = list[it],
+                    onPictureClick = { onPictureItemClick(list[it]) })
             }
         }
 
@@ -191,7 +205,7 @@ fun SearchBar(modifier: Modifier = Modifier, text: String, onValueChange: (Strin
 
 
 @Composable //Composable affichant 1 élément
-fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherBean) {
+fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherBean, onPictureClick: () -> Unit) {
     var expended by remember { mutableStateOf(false) }
 
     Row(
@@ -220,6 +234,7 @@ fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherBean) {
             modifier = Modifier
                 .heightIn(max = 100.dp)
                 .widthIn(max = 100.dp)
+                .clickable(onClick = onPictureClick)
         )
 
         Column(
