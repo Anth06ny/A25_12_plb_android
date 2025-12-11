@@ -1,6 +1,8 @@
 package com.amonteiro.a25_12_plb_android.presentation.ui.screens
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +25,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -60,17 +66,20 @@ fun SearchScreen(
     mainViewModel: MainViewModel = MainViewModel()
 ) {
 
-    Column(modifier = modifier.fillMaxSize(),
+    Column(
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ) {
 
-        SearchBar()
+        var searchText by remember { mutableStateOf("") }
+
+        SearchBar(text = searchText) { searchText = it }
 
 
-        val list = mainViewModel.dataList.collectAsStateWithLifecycle().value
+        val list = mainViewModel.dataList.collectAsStateWithLifecycle().value.filter { it.name.contains(searchText, true) }
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)
-        , modifier = Modifier.weight(1f)
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)
         ) {
             items(list.size) {
                 PictureRowItem(data = list[it])
@@ -79,7 +88,7 @@ fun SearchScreen(
 
         Row {
             Button(
-                onClick = { /* Do something! */ },
+                onClick = { searchText = "" },
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding
             ) {
                 Icon(
@@ -110,10 +119,11 @@ fun SearchScreen(
 }
 
 @Composable
-fun SearchBar(modifier: Modifier = Modifier) {
+fun SearchBar(modifier: Modifier = Modifier, text: String, onValueChange: (String) -> Unit) {
+
     TextField(
-        value = "", //Valeur affichée
-        onValueChange = { newValue: String -> }, //Nouveau texte entrée
+        value = text, //Valeur affichée
+        onValueChange = onValueChange, //Nouveau texte entrée
         leadingIcon = { //Image d'icône
             Icon(
                 imageVector = Icons.Default.Search,
@@ -143,10 +153,14 @@ fun SearchBar(modifier: Modifier = Modifier) {
 
 @Composable //Composable affichant 1 élément
 fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherBean) {
-    Row(modifier = modifier
-        .fillMaxWidth()
-        .padding(4.dp)
-        .background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+    var expended by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(4.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+    ) {
 
         //Permission Internet nécessaire
         AsyncImage(
@@ -169,16 +183,23 @@ fun PictureRowItem(modifier: Modifier = Modifier, data: WeatherBean) {
                 .widthIn(max = 100.dp)
         )
 
-        Column(modifier = Modifier.padding(4.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(4.dp)
+                .fillMaxWidth()
+                .clickable {
+                    expended = !expended
+                }) {
             Text(
                 text = data.name,
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                text = data.getResume().take(20) + "...",
+                text = if (expended) data.getResume() else (data.getResume().take(20) + "..."),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.animateContentSize()
             )
         }
     }
